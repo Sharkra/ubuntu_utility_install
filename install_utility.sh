@@ -30,33 +30,55 @@ function exportToBashrc() {
     source $HOME/.bashrc
 }
 
-####################################### START #####################################
+function installPackages() {
+  if checkPackagesInstalled "$@"; then
+    echo_green "Package(s) Installed"
+  else
+    echo_blue "Installing \"$@\""
+    sudo apt install -y "$@"
+  fi
+}
+
+function installDebPackage(){
+
+  if checkPackagesInstalled "$1"; then
+    echo_green "Package Installed"
+  else
+    echo_blue "Downloading $1"
+    cd /tmp
+    wget "$2" -O "$1".deb
+    echo_blue "Installing $1"
+    sudo dpkg -i "$1".deb
+    sudo apt install -f
+  fi
+}
+
+###################################################################################
+############ START ################################################################
+###################################################################################
 
 sudo apt update
 sudo apt -y upgrade
-echo_blue "Installing Utility"
-if checkPackagesInstalled guake \
-                          terminator \
-                          gdebi \
-                          git \
-                          gksu \
-                          unity-tweak-tool \
-                          redshift \
-                          redshift-gtk;
-then
-  echo_green "Utility stuff already installed"
-else
-  sudo apt install -y guake \
-                      terminator \
-                      gdebi \
-                      git \
-                      gksu \
-                      unity-tweak-tool \
-                      redshift \
-                      redshift-gtk;
-fi
 
-############  ATOM ##################
+############ Utility ############
+echo_blue "Installing Utility"
+installPackages guake \
+                terminator \
+                gdebi \
+                git \
+                gksu \
+                unity-tweak-tool \
+                redshift \
+                redshift-gtk;
+
+############ Hardware Monitoring ############
+echo_blue "Installing Hardware Monitoring"
+installPackages indicator-multiload \
+                lm-sensors \
+                hddtemp \
+                psensor;
+
+############  ATOM ############
 echo_blue "Installing Atom"
 if checkPackagesInstalled atom; then
   echo_green "Already Installed"
@@ -70,23 +92,7 @@ else
   sudo apt install -y atom;
 fi
 
-######## Hardware Monitoring ############
-echo_blue "Installing Hardware Monitoring"
-if checkPackagesInstalled indicator-multiload \
-                          lm-sensors \
-                          hddtemp \
-                          psensor;
-then
-  echo_green "Already Installed"
-else
-  sudo apt update
-  sudo apt install -y indicator-multiload \
-                      lm-sensors \
-                      hddtemp \
-                      psensor;
-fi
-
-############## Git Aware Prompt ###################
+############ Git Aware Prompt ############
 echo_blue "Installing Git Aware Prompt"
 if [ ! -d "$HOME/.bash" ]; then
     mkdir -p $HOME/.bash
@@ -97,15 +103,16 @@ if [ ! -d git-aware-prompt ]; then
 fi
 
 exportToBashrc "export GITAWAREPROMPT=~/.bash/git-aware-prompt"
-exportToBashrc source \${GITAWAREPROMPT}/main.sh
+exportToBashrc "source \${GITAWAREPROMPT}/main.sh"
 exportToBashrc "export PS1=\"\${debian_chroot:+(\$debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w \[\$txtcyn\]\$git_branch\[\$txtred\]\$git_dirty\[\$txtrst\]\$\""
 
-############# IMAGE STUFF ######################
+############ IMAGE STUFF ############
 echo_blue "Installing Image Stuff"
-if checkPackagesInstalled krita \
-                          rawtherapee \
-                          vlc \
-                          openshot-qt;
+installPackages krita \
+                rawtherapee \
+                vlc
+
+if checkPackagesInstalled openshot-qt;
 then
   echo_green "Image stuff already installed"
 else
@@ -115,54 +122,26 @@ else
     sudo add-apt-repository ppa:openshot.developers/ppa
     sudo apt update
   fi
-  sudo apt install -y krita \
-                      rawtherapee \
-                      vlc \
-                      openshot-qt;
+  sudo apt install -y openshot-qt;
 fi
 
-############## Chat STUFF #################
+############ Chat STUFF ############
 echo_blue "Installing Chat Stuff"
-if checkPackagesInstalled slack-desktop;
-then
-  echo_green "Slack stuff already installed"
-else
-  cd /tmp
-  wget https://downloads.slack-edge.com/linux_releases/slack-desktop-3.0.5-amd64.deb
-  sudo dpkg -i slack-desktop-3.0.5-amd64.deb
-  sudo apt install -f
-fi
-if checkPackagesInstalled skypeforlinux;
-then
-  echo_green "Skype already installed"
-else
-  cd /tmp
-  wget https://go.skype.com/skypeforlinux-64.deb
-  sudo dpkg -i skypeforlinux-64.deb
-  sudo apt install -f
-fi
+installDebPackage slack-desktop https://downloads.slack-edge.com/linux_releases/slack-desktop-3.0.5-amd64.deb
+installDebPackage skypeforlinux https://go.skype.com/skypeforlinux-64.deb
 
-#################### Chrome install #######################
+############ Chrome install ############
 echo_blue "Installing Chrome"
-if checkPackagesInstalled google-chrome-stable;
-then
-  echo_green "Chrome stuff already installed"
-else
-  cd /tmp
-  wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-  sudo dpkg -i google-chrome-stable_current_amd64.deb
-  sudo apt install -f;
-fi
+installDebPackage google-chrome-stable https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 
-
-################## MagicWormhole ##################
+############ MagicWormhole ############
 echo_blue "Installing MagicWormhole"
 if pip show magic-wormhole > /dev/null 2 | grep -q magic-wormhole; then
   echo_green "Already installed"
 else
   if checkPackagesInstalled python-pip build-essential python-dev libffi-dev libssl-dev;
   then
-    echo_green "MagicWormhole stuff already installed"
+    echo_green "MagicWormhole already installed"
   else
     sudo apt-get install python-pip build-essential python-dev libffi-dev libssl-dev
     pip install --upgrade pip
@@ -172,7 +151,7 @@ else
   fi
 fi
 
-############# Spotify ######################
+############ Spotify ############
 echo_blue "Installing Spotify"
 if checkPackagesInstalled spotify-client;
 then
@@ -188,11 +167,11 @@ else
   sudo apt install -y spotify-client;
 fi
 
-#################### VisualStudioCode install #######################
+############ VisualStudioCode install ############
 echo_blue "Installing VisualStudioCode"
 if [ -d "\$HOME/Programs/VSCode-linux-x64" ];
 then
-  echo_green "VisualStudioCode stuff already installed"
+  echo_green "VisualStudioCode already installed"
 else
   if [ ! -d "$HOME/Programs" ]; then
       mkdir -p $HOME/Programs
