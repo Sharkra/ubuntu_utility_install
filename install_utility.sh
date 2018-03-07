@@ -102,9 +102,9 @@ if [ ! -d git-aware-prompt ]; then
   git clone git://github.com/jimeh/git-aware-prompt.git
 fi
 
-exportToBashrc "export GITAWAREPROMPT=~/.bash/git-aware-prompt"
+exportToBashrc "export GITAWAREPROMPT=\$HOME/.bash/git-aware-prompt"
 exportToBashrc "source \${GITAWAREPROMPT}/main.sh"
-exportToBashrc "export PS1=\"\${debian_chroot:+(\$debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w \[\$txtcyn\]\$git_branch\[\$txtred\]\$git_dirty\[\$txtrst\]\$\""
+exportToBashrc "export PS1=\"\\\${debian_chroot:+(\\\$debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w \[\\\$txtcyn\]\\\$git_branch\[\\\$txtred\]\\\$git_dirty\[\\\$txtrst\]\\\$\""
 
 ############ IMAGE STUFF ############
 echo_blue "Installing Image Stuff"
@@ -168,18 +168,6 @@ else
 fi
 
 ############ VisualStudioCode install ############
+
 echo_blue "Installing VisualStudioCode"
-if [ -d "\$HOME/Programs/VSCode-linux-x64" ];
-then
-  echo_green "VisualStudioCode already installed"
-else
-  if [ ! -d "$HOME/Programs" ]; then
-      mkdir -p $HOME/Programs
-  fi
-  cd /tmp
-  if [ ! -f VisualStudioCode ]; then
-    wget -O VisualStudioCode https://go.microsoft.com/fwlink/?LinkID=620884
-  fi
-  tar -xf VisualStudioCode -C $HOME/Programs
-  sudo ln -s $HOME/Programs/VSCode-linux-x64 /usr/local/bin/vcode
-fi
+installDebPackage code https://go.microsoft.com/fwlink/?LinkID=760868
